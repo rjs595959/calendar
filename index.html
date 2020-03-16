@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link href="https://fonts.googleapis.com/css?family=Gaegu&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Liu+Jian+Mao+Cao&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+	<style>
+		* {
+		    margin: 0;
+		    padding: 0;
+		}
+
+		.date-wrap {
+		    width: 350px;
+		}
+
+		.date-header {
+			width: 320px;
+		    height: 30px;
+		    margin-left: 30px;
+		    padding-top: 10px;
+		    font-weight: bold;
+		    font-family: 'Gaegu', cursive;
+		}
+
+		.date-header span {
+			margin-right: 10px;
+		}
+
+		.date-header-left {
+			float: left;
+		}
+
+		.date-header-right {
+		    float: right;    
+		}
+	
+		.date-table {
+			width: 350px;
+			text-align: right;
+			table-layout:fixed;
+
+		}
+		.date-table th {
+			font-family: 'Liu Jian Mao Cao', cursive;
+		    font-weight: normal;
+		}
+
+		.date-table td, th {
+			font-family: 'Nanum Pen Script', cursive;
+		   
+		}
+	</style>
+	<script src='https://kit.fontawesome.com/a076d05399.js'></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.js" 
+		integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" 
+		crossorigin="anonymous"></script>
+	<script>
+		$("document").ready(function() {
+		    var days  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+		    var dates = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+			function  getFirstDayIndex(year, month){
+				// 1). 1970년부터 해당 년도까지의 일수 구하기
+				var startYear = new Date(0).getFullYear();
+				var diffYear = year-startYear;
+				var totalDates = Math.floor(diffYear/4)*1461 + (diffYear%4)*365;
+
+				// 2). 해당 년도의 1월 1일부터 현재 달의 1일까지 연도 구하기
+				if(year%4==0) dates[1]=29;
+				else dates[1] = 28;
+
+				for(var i=0; i<month; i++) {
+					totalDates += dates[i];
+				}
+
+				//1970년 1월 1일은 목요일이므로, dates의 인덱스에 맞추기 위하여 4를 더함.
+				return (totalDates+4)%7;
+			}
+
+		   	var nowTime = new Date();
+		   	var nowYear = nowTime.getFullYear();
+		   	var nowMonth = nowTime.getMonth();
+		   	var nowDay  = getFirstDayIndex(nowYear, nowMonth);
+
+		   	makeCalendar();
+			function makeCalendar() {
+				var moveMonth = Number($(this).attr('move-cal')) ? Number($(this).attr('move-cal')) : 0;
+				nowMonth += moveMonth;
+				if(nowMonth == -1) {
+					nowYear--;
+					nowMonth = 11;
+				}
+				if(nowMonth == 12) {
+					nowYear++;
+					nowMonth = 0;
+				}                               
+
+				var firstDayIndex = getFirstDayIndex(nowYear, nowMonth);
+				var dayIndex = 0;   
+				var output   = "";
+
+				output += "<tr>";
+				for(var i=0; i<firstDayIndex; i++) {
+					output +="<td></td>";
+				}
+				for(var i=firstDayIndex; i<7; i++) {
+					output +="<td>"+(++dayIndex)+"</td>";
+				}
+				output += "</tr>";
+				
+				for(var i=1; i<Math.ceil((dates[nowMonth]+firstDayIndex)/7); i++) {
+					output += "<tr>";
+					for(var j=0; j<7 && (dayIndex < dates[nowMonth]); j++) {
+						output +="<td>"+(++dayIndex)+"</td>";
+					}
+					output += "</tr>";
+				}
+
+				$.each($("#dateTable tr"), function(index,data) {
+					if(index != 0) data.remove(); 
+				});
+				$(output).appendTo("#dateTable");
+				$("#year").text(nowYear.toString() + "년");
+				$("#month").text((nowMonth+1).toString() + "월");
+			}
+
+			paintCalendar();
+			function paintCalendar() {
+			   	// 일요일은 빨간색, 토요일은 회색을 주는 요소이다.
+			   	$('#dateTable tr th').first().css("color","red");
+			   	$('#dateTable tr th').last().css("color","blue");
+			   	$.each($('#dateTable tr'), function(index, item) {
+			   		$(item).find("td").eq(0).css("color","red");
+			   		$(item).find("td").eq(6).css("color","blue");
+			   	});
+			 }
+
+		   	$('#date-plus').on("click", makeCalendar);
+			$('#date-minus').on("click", makeCalendar);
+
+			$('#date-plus').on("click", paintCalendar);
+			$('#date-minus').on("click", paintCalendar);
+		});
+			
+   	</script>
+</head>
+<body>
+	<div class="date-wrap">
+        <div class="date-header">
+            <span id="year" class="date-header-left"></span>
+            <span id="month" class="date-header-left"></span>
+            <span id="date-plus" class='fas fa-chevron-right date-header-right' move-cal=1></span>
+            <span id="date-minus" class='fas fa-chevron-left date-header-right' move-cal=-1></span>
+        </div>
+        <div class="date-content">
+            <table id="dateTable" class="date-table">
+                <tr>
+                	<th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
